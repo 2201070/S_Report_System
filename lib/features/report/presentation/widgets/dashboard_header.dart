@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/size_config.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../notification/presentation/screens/notification_screen.dart';
 import '../../data/models/dashboard_data_model.dart';
 
 import 'package:s_report_system/features/profile/presentation/cubit/profile_cubit.dart';
@@ -65,7 +66,7 @@ class DashboardHeader extends StatelessWidget {
                 _buildVolunteerButton(),
                 SizedBox(width: 12.w),
               ],
-              _buildBellButton(),
+              _buildBellButton(context),
             ],
           )
         ],
@@ -101,14 +102,23 @@ class DashboardHeader extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildBellButton() {
+ Widget _buildBellButton(BuildContext context) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
         IconButton(
-          onPressed: onBellTap,
           icon: Icon(Icons.notifications_none, color: Colors.white, size: 28.sp),
+          onPressed: () {
+                              // الانتقال لشاشة عرض الخريطة الخاصة بالبلاغ
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => NotificationsScreen(),
+                                   
+                                  ),
+                                
+                              );
+                            },
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),

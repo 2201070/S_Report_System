@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart'; 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:s_report_system/core/theme/app_colors.dart';
 import 'package:s_report_system/features/report/presentation/widgets/location_search_bar.dart';
 import 'package:s_report_system/features/report/presentation/widgets/address_card.dart';
 import 'package:s_report_system/features/report/presentation/widgets/map_pin_indicator.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:s_report_system/features/report/presentation/cubit/report_cubit.dart';
 import 'package:s_report_system/features/report/data/models/create_report_model.dart';
 import 'package:s_report_system/core/utils/permission_service.dart';
@@ -23,53 +27,100 @@ class LocationPickerScreen extends StatefulWidget {
 
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _address = "123 Al-Ahram St, Giza";
+  GoogleMapController? _mapController;
+  
+  LatLng _pickedLocation = const LatLng(26.5591, 31.6957); // سوهاج
+  String _address = "جاري تحديد العنوان...";
+  bool _isFetchingAddress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _handleCurrentLocation();
+  }
+
+  // دالة جلب العنوان (Reverse Geocoding) 
+  Future<void> _getAddressFromLatLng(LatLng position) async {
+    if (!mounted) return;
+    setState(() => _isFetchingAddress = true);
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        setState(() {
+          _address = "${place.street ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}";
+          
+          _searchController.clear(); 
+        });
+      }
+    } catch (e) {
+      debugPrint("Geocoding Error: $e");
+      setState(() {
+        _address = "${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}";
+      });
+    } finally {
+      if (mounted) setState(() => _isFetchingAddress = false);
+    }
+  }
+
+  void _animateToLocation(LatLng target) {
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(target, 16),
+    );
+    setState(() => _pickedLocation = target);
+    _getAddressFromLatLng(target);
+  }
 
   void _handleConfirm() {
-    context.read<ReportCubit>().updateLocation(30.0444, 31.2357);
+    context.read<ReportCubit>().updateLocation(
+      _pickedLocation.latitude, 
+      _pickedLocation.longitude
+    );
+    
     final cubit = context.read<ReportCubit>();
     final reportData = CreateReportModel(
       description: cubit.draftDescription,
       latitude: cubit.draftLat,
       longitude: cubit.draftLng,
       reportType: cubit.draftCategory ?? 'environmental',
-      cityId: 2, // Default cityId
+      cityId: 1, 
       imageFiles: cubit.draftImages,
       voiceFile: cubit.draftVoicePath,
     );
+    
     Navigator.pushNamed(context, '/review_report', arguments: reportData);
   }
 
-  void _handleCurrentLocation() async {
+  Future<void> _handleCurrentLocation() async {
     final isGranted = await PermissionService.requestLocationPermission();
     if (!isGranted) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('reporting.permission_denied'.tr()),
-            content: Text('reporting.permission_denied_desc'.tr()),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('reporting.ok'.tr()),
-              ),
-            ],
-          ),
-        );
-      }
+       _showPermissionDialog();
       return;
     }
+    Position position = await Geolocator.getCurrentPosition();
+    _animateToLocation(LatLng(position.latitude, position.longitude));
+  }
 
-    setState(() {
-      _address = "Current Location: 123 Al-Ahram St, Giza";
-      _searchController.text = _address;
-    });
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('reporting.permission_denied'.tr()),
+        content: Text('reporting.permission_denied_desc'.tr()),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('reporting.ok'.tr())),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -87,72 +138,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         ),
         child: SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: AppColors.borderPrimary)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    InkWell(
-                      onTap: widget.onBack,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'reporting.location_title'.tr(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'reporting.step_2'.tr(),
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                            ),
-                          ],
-                        ),
-                        // Progress Stepper (Green, Cyan, Gray)
-                        Row(
-                          children: [
-                            Container(width: 32, height: 4, decoration: BoxDecoration(color: AppColors.accentGreen, borderRadius: BorderRadius.circular(2))),
-                            const SizedBox(width: 8),
-                            Container(width: 32, height: 4, decoration: BoxDecoration(color: AppColors.accentBlue, borderRadius: BorderRadius.circular(2))),
-                            const SizedBox(width: 8),
-                            Container(width: 32, height: 4, decoration: BoxDecoration(color: AppColors.borderPrimary, borderRadius: BorderRadius.circular(2))),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              _buildHeader(),
 
-              // Search Bar
+              // خانة البحث الصورية - لن تعرض العنوان المكتشف
               LocationSearchBar(
                 controller: _searchController,
-                onChanged: (val) {
-                  // In a real app we'd trigger a search here
-                },
+                onChanged: (val) {},
               ),
 
-              // Map Area
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -165,50 +159,34 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     borderRadius: BorderRadius.circular(30),
                     child: Stack(
                       children: [
-                        // Map Placeholder
-                        Positioned.fill(
-                          child: Container(
-                            color: AppColors.backgroundStart,
-                            child: const Center(
-                              child: Text(
-                                'Map View Area',
-                                style: TextStyle(color: AppColors.borderPrimary, fontSize: 24),
-                              ),
-                            ),
-                          ),
+                        GoogleMap(
+                          initialCameraPosition: CameraPosition(target: _pickedLocation, zoom: 14),
+                          onMapCreated: (controller) => _mapController = controller,
+                          onCameraMove: (position) => _pickedLocation = position.target,
+                          onCameraIdle: () => _getAddressFromLatLng(_pickedLocation),
+                          myLocationEnabled: true,
+                          myLocationButtonEnabled: false,
+                          zoomControlsEnabled: false,
                         ),
                         
-                        // Centered Pin
-                        const Center(
-                          child: MapPinIndicator(),
-                        ),
+                        const Center(child: IgnorePointer(child: MapPinIndicator())),
 
-                        // Current Location Button
+                        if (_isFetchingAddress)
+                          const Positioned(
+                            top: 10,
+                            left: 0,
+                            right: 0,
+                            child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentBlue)),
+                          ),
+
                         Positioned(
                           bottom: 16,
                           right: 16,
-                          child: InkWell(
-                            onTap: _handleCurrentLocation,
-                            borderRadius: BorderRadius.circular(24),
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: const BoxDecoration(
-                                color: AppColors.accentBlue,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.near_me,
-                                color: AppColors.backgroundStart,
-                              ),
-                            ),
+                          child: FloatingActionButton(
+                            backgroundColor: AppColors.accentBlue,
+                            mini: true,
+                            onPressed: _handleCurrentLocation,
+                            child: const Icon(Icons.near_me, color: Colors.white),
                           ),
                         ),
                       ],
@@ -219,17 +197,59 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
 
               const SizedBox(height: 16),
 
-              // Address Card
               AddressCard(
                 address: _address,
                 onConfirm: _handleConfirm,
               ),
 
-              const SizedBox(height: 16), // Bottom Padding
+              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: widget.onBack,
+            child: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('reporting.location_title'.tr(), style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text('reporting.step_2'.tr(), style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                ],
+              ),
+              _buildProgressStepper(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressStepper() {
+    return Row(
+      children: [
+        _step(AppColors.accentGreen),
+        const SizedBox(width: 8),
+        _step(AppColors.accentBlue),
+        const SizedBox(width: 8),
+        _step(AppColors.borderPrimary),
+      ],
+    );
+  }
+
+  Widget _step(Color color) => Container(width: 32, height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)));
 }
