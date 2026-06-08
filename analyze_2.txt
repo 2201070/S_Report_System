@@ -1,0 +1,13 @@
+﻿Analyzing s_report_system...
+
+warning - lib\features\volunteer\screens\mission_details_screen.dart:4:8 - Unused import: '../../../../core/theme/app_text_styles.dart'. Try removing the import directive. - unused_import
+   info - cleanup.dart:16:9 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - cleanup2.dart:16:7 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - cleanup2.dart:47:25 - Use interpolation to compose strings and values. Try using string interpolation to build the composite string. - prefer_interpolation_to_compose_strings
+   info - cleanup2.dart:48:5 - Don't invoke 'print' in production code. Try using a logging framework. - avoid_print
+   info - cleanup2.dart:71:25 - Use interpolation to compose strings and values. Try using string interpolation to build the composite string. - prefer_interpolation_to_compose_strings
+   info - lib\features\alerts\widgets\alert_card.dart:56:42 - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\features\alerts\widgets\heatmap_mock.dart:75:42 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\features\alerts\widgets\heatmap_mock.dart:76:40 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+
+9 issues found.
