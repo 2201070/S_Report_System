@@ -12,12 +12,28 @@ class LeaderboardRemoteDataSourceImpl implements LeaderboardRemoteDataSource {
 
   LeaderboardRemoteDataSourceImpl({required this.dio});
 
+  // دالة مساعدة لمعالجة الأخطاء بذكاء وتوحيد شكل الكود
+  ServerException _handleError(DioException e) {
+    String errorMsg = "";
+    if (e.response?.data != null) {
+      if (e.response!.data is Map && e.response!.data['message'] != null) {
+        errorMsg = e.response!.data['message'].toString();
+      } else {
+        errorMsg = e.response!.data.toString();
+      }
+    }
+    if (errorMsg.trim().isEmpty) {
+      errorMsg = e.message ?? "Connection Error: Please check your internet or server status.";
+    }
+    return ServerException(message: errorMsg);
+  }
+
   @override
   Future<List<LeaderboardModel>> getLeaderboard() async {
     try {
+      // الـ Interceptor يضيف التوكن تلقائياً هنا
       final response = await dio.get(
         '${ApiConstants.baseUrl}/Volunteer/leaderboard',
-        options: ApiConstants.authOptions(),
       );
 
       if (response.statusCode == 200) {
@@ -30,20 +46,7 @@ class LeaderboardRemoteDataSourceImpl implements LeaderboardRemoteDataSource {
       throw ServerException(
           message: 'Failed to load leaderboard: ${response.statusCode}');
     } on DioException catch (e) {
-      String errorMsg = "";
-      if (e.response?.data != null) {
-        if (e.response!.data is Map && e.response!.data['message'] != null) {
-          errorMsg = e.response!.data['message'].toString();
-        } else {
-          errorMsg = e.response!.data.toString();
-        }
-      }
-      
-      if (errorMsg.trim().isEmpty) {
-        errorMsg = e.message ?? "Connection Error: Please check your internet or server status.";
-      }
-      
-      throw ServerException(message: errorMsg);
+      throw _handleError(e);
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException(message: e.toString());

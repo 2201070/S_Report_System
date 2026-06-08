@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:s_report_system/core/api/api_constants.dart';
 
 class SplashScreen extends StatefulWidget {
  const SplashScreen({super.key});
@@ -62,39 +63,39 @@ parent: _progressController,
 
  _startAnimations();
  }
+void _startAnimations() async {
+    _fadeController.forward();
+    
+    // Slight delay for progress bar start based on React's delay of 0.9s
+    await Future.delayed(const Duration(milliseconds: 900));
+    _progressController.forward();
 
- void _startAnimations() async {
- _fadeController.forward();
-  
- // Slight delay for progress bar start based on React's delay of 0.9s
- await Future.delayed(const Duration(milliseconds: 900));
- _progressController.forward();
+    // 3 seconds total navigation delay based on timer
+    await Future.delayed(const Duration(milliseconds: 2100)); // 0.9s + 2.1s = 3.0s total
 
- // 3 seconds total navigation delay based on timer
- await Future.delayed(const Duration(milliseconds: 2100)); // 0.9s + 2.1s = 3.0s total
+    if (!mounted) return;
 
- if (!mounted) return;
+    final user = FirebaseAuth.instance.currentUser;
 
- 
- final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.emailVerified) {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
 
-  if (user != null && user.emailVerified) {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-
-    if (token.isNotEmpty) {
-      // مسجل دخول → روح للـ Dashboard
-      Navigator.pushReplacementNamed(context, '/');
+      if (token.isNotEmpty) {
+        // ✅ هذا هو السطر السحري لحل مشكلة الـ 403
+        ApiConstants.currentToken = token; 
+        
+        // مسجل دخول → روح للـ Dashboard
+        Navigator.pushReplacementNamed(context, '/');
+      } else {
+        // Firebase موجود بس مفيش token → روح للـ Login
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     } else {
-      // Firebase موجود بس مفيش token → روح للـ Login
-      Navigator.pushReplacementNamed(context, '/login');
+      // مش مسجل → روح للـ Onboarding
+      Navigator.pushReplacementNamed(context, '/onboarding');
     }
-  } else {
-    // مش مسجل → روح للـ Onboarding
-    Navigator.pushReplacementNamed(context, '/onboarding');
   }
- }
-
  @override
  void dispose() {
  _fadeController.dispose();

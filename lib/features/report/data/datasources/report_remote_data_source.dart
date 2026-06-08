@@ -44,7 +44,8 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
       final response = await dio.post(
         '${ApiConstants.baseUrl}/Report',
         data: formData,
-        options: ApiConstants.authOptions(contentType: 'multipart/form-data'),
+        // نحدد فقط نوع البيانات هنا لأنها تحتوي على ملفات وصور مرفقة
+        options: Options(contentType: 'multipart/form-data'), 
       );
       
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -65,10 +66,9 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
   @override
   Future<List<MyReportsModel>> getMyReports() async {
     try {
-      final response = await dio.get(
-        '${ApiConstants.baseUrl}/Report/MyReports',
-        options: ApiConstants.authOptions(),
-      );
+      // الـ Interceptor يحقن التوكن تلقائياً هنا
+      final response = await dio.get('${ApiConstants.baseUrl}/Report/MyReports');
+      
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data
@@ -87,10 +87,9 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
   @override
   Future<ReportDetailsModel> getReportDetails(int id) async {
     try {
-      final response = await dio.get(
-        '${ApiConstants.baseUrl}/Report/ReportDetails/$id',
-        options: ApiConstants.authOptions(),
-      );
+      // الـ Interceptor يحقن التوكن تلقائياً هنا لحل مشكلة الـ 403
+      final response = await dio.get('${ApiConstants.baseUrl}/Report/ReportDetails/$id');
+      
       if (response.statusCode == 200) {
         return ReportDetailsModel.fromJson(response.data as Map<String, dynamic>);
       }
@@ -106,10 +105,8 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
   @override
   Future<List<ReportCategoryModel>> getCategories() async {
     try {
-      final response = await dio.get(
-        '${ApiConstants.baseUrl}/Report/Categories',
-        options: ApiConstants.authOptions(),
-      );
+      final response = await dio.get('${ApiConstants.baseUrl}/Report/Categories');
+      
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data
@@ -128,10 +125,8 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
   @override
   Future<String> cancelReport(int id) async {
     try {
-      final response = await dio.put(
-        '${ApiConstants.baseUrl}/Report/$id/cancel',
-        options: ApiConstants.authOptions(),
-      );
+      final response = await dio.put('${ApiConstants.baseUrl}/Report/$id/cancel');
+      
       if (response.statusCode == 200) {
         return response.data.toString();
       }
@@ -150,7 +145,6 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
       final response = await dio.post(
         '${ApiConstants.baseUrl}/Report/SynOfflineReports',
         data: reports,
-        options: ApiConstants.authOptions(),
       );
       return SyncResponseModel.fromJson(response.data);
     } on DioException catch (e) {

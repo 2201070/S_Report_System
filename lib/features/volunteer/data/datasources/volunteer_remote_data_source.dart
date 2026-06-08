@@ -41,7 +41,6 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
       final response = await dio.get(
         '${ApiConstants.baseUrl}/Volunteer/nearby',
         queryParameters: {'lat': lat, 'lng': lng, 'cityId': cityId},
-        options: ApiConstants.authOptions(),
       );
       if (response.statusCode == 200 && response.data != null) {
         return (response.data as List)
@@ -62,7 +61,6 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
       final response = await dio.post(
         '${ApiConstants.baseUrl}/Volunteer/AcceptMission',
         queryParameters: {'missionId': id},
-        options: ApiConstants.authOptions(),
       );
       if (response.statusCode != 200 && response.statusCode != 204) {
          throw ServerException(message: 'Failed to accept mission.');
@@ -79,7 +77,6 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
     try {
       final response = await dio.post(
         '${ApiConstants.baseUrl}/Volunteer/complete/$id',
-        options: ApiConstants.authOptions(),
       );
       if (response.statusCode != 200 && response.statusCode != 204) {
          throw ServerException(message: 'Failed to complete mission.');
@@ -96,7 +93,6 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
     try {
       final response = await dio.post(
         '${ApiConstants.baseUrl}/Volunteer/cancel/$id',
-        options: ApiConstants.authOptions(),
       );
       if (response.statusCode != 200 && response.statusCode != 204) {
          throw ServerException(message: 'Failed to cancel mission.');
@@ -113,7 +109,6 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
     try {
       final response = await dio.get(
         '${ApiConstants.baseUrl}/Volunteer/current',
-        options: ApiConstants.authOptions(),
       );
       if (response.statusCode == 200 && response.data != null) {
         if (response.data is Map && (response.data as Map).isEmpty) return null;
@@ -135,7 +130,6 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
     try {
       final response = await dio.get(
         '${ApiConstants.baseUrl}/Volunteer/History',
-        options: ApiConstants.authOptions(),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;

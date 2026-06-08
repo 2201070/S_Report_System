@@ -41,9 +41,15 @@ class DioFactory {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           options.headers['Accept'] ??= 'application/json';
-         if (!options.headers.containsKey('Authorization')) {
-            options.headers['Authorization'] = 'Bearer ${ApiConstants.kAuthToken}';
+          print('🔑 My Current Token: ${ApiConstants.currentToken}');
+          
+          // ✅ تم إضافة شرط للتأكد من وجود التوكن فعلياً لتجنب إرسال "Bearer null"
+          if (!options.headers.containsKey('Authorization') && 
+              ApiConstants.currentToken != null && 
+              ApiConstants.currentToken!.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer ${ApiConstants.currentToken}';
           }
+          
           return handler.next(options);
         },
       ),
