@@ -484,26 +484,28 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                   ),
                   child: Row(
                     children: [
-                      Expanded(
-                        flex: 1,
-                        child: OutlinedButton.icon(
-                          onPressed: () => _showConfirmationModal(false),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: AppColors.accentRed.withValues(alpha: 0.5)),
-                            backgroundColor: AppColors.surfacePrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          icon: const Icon(Icons.close, color: AppColors.accentRed, size: 20),
-                          label: Text(
-                            'volunteer.decline'.tr(),
-                            style: const TextStyle(color: AppColors.accentRed, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
+                      if (widget.mission.status == 'Accepted') ...[
+        Expanded(
+          flex: 1,
+          child: OutlinedButton.icon(
+            onPressed: () => _showConfirmationModal(false),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.accentRed.withValues(alpha: 0.5)),
+              backgroundColor: AppColors.surfacePrimary,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            icon: const Icon(Icons.close, color: AppColors.accentRed, size: 20),
+            label: Text(
+              'volunteer.decline'.tr(),
+              style: const TextStyle(color: AppColors.accentRed, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+      ],
                       Expanded(
                         flex: 2,
                         child: ElevatedButton.icon(
