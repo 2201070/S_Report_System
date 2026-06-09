@@ -3,10 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:s_report_system/core/theme/app_colors.dart';
+import 'package:s_report_system/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:s_report_system/features/profile/presentation/cubit/profile_state.dart';
 import 'package:s_report_system/features/report/data/models/create_report_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:s_report_system/features/report/presentation/cubit/report_cubit.dart';
 import 'package:s_report_system/features/report/presentation/cubit/report_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewReportScreen extends StatefulWidget {
   final CreateReportModel reportData;
@@ -24,9 +27,29 @@ class ReviewReportScreen extends StatefulWidget {
 
 class _ReviewReportScreenState extends State<ReviewReportScreen> {
   bool _isEmergency = false;
+  
 
-  void _handleSubmit() {
-    context.read<ReportCubit>().submitReport(widget.reportData);
+
+  void _handleSubmit() async {
+    final prefs = await SharedPreferences.getInstance();
+  final cityId = prefs.getInt('cityId') ?? 1;
+     debugPrint('🏙️ cityId اللي هيتبعت: $cityId');
+
+    
+
+    // بناء التقرير النهائي ببيانات الشاشات السابقة + مدينة المستخدم
+    final finalReport = CreateReportModel(
+      description: widget.reportData.description,
+      latitude: widget.reportData.latitude,
+      longitude: widget.reportData.longitude,
+      reportType: widget.reportData.reportType,
+      imageFiles: widget.reportData.imageFiles,
+      voiceFile: widget.reportData.voiceFile,
+      cityId: cityId ,// 👈 إرفاق المدينة هنا
+    );
+    
+    context.read<ReportCubit>().submitReport(finalReport);
+
   }
 
   String _getCategoryName(String id) {

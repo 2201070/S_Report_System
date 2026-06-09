@@ -17,6 +17,7 @@ class ReportCubit extends Cubit<ReportState> {
   double _draftLat = 0.0;
   double _draftLng = 0.0;
   String? _draftVoicePath;
+  int _draftCityId = 1; // 👈 1. إضافة المتغير الخاص بالمدينة
 
   String? get draftCategory => _draftCategory;
   List<String> get draftImages => List.unmodifiable(_draftImages);
@@ -24,6 +25,7 @@ class ReportCubit extends Cubit<ReportState> {
   double get draftLat => _draftLat;
   double get draftLng => _draftLng;
   String? get draftVoicePath => _draftVoicePath;
+  int get draftCityId => _draftCityId; // 👈 2. إضافة الـ Getter
 
   ReportCubit({
     required this.submitReportUseCase,
@@ -46,6 +48,9 @@ class ReportCubit extends Cubit<ReportState> {
 
   void updateVoicePath(String path) => _draftVoicePath = path;
 
+  // 👈 3. دالة لتحديث المدينة من الـ UI
+  void updateCityId(int cityId) => _draftCityId = cityId; 
+
   // ── Final submission ──
   Future<void> submitReport([CreateReportModel? overrideReport]) async {
     emit(const ReportLoading());
@@ -56,7 +61,7 @@ class ReportCubit extends Cubit<ReportState> {
           latitude: _draftLat,
           longitude: _draftLng,
           reportType: _draftCategory ?? 'environmental',
-          cityId: 2,
+          cityId: _draftCityId, // 👈 4. تمرير المتغير للـ Model هنا بدلاً من تركه فارغاً
           imageFiles: _draftImages,
           voiceFile: _draftVoicePath,
         );
@@ -98,6 +103,7 @@ class ReportCubit extends Cubit<ReportState> {
     _draftLat = 0.0;
     _draftLng = 0.0;
     _draftVoicePath = null;
+    _draftCityId = 1; // 👈 5. تصفير قيمة المدينة
     emit(const ReportInitial());
   }
 }

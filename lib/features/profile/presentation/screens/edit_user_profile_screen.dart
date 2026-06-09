@@ -21,7 +21,6 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _addressController;
-
   @override
   void initState() {
     super.initState();

@@ -42,7 +42,7 @@ class UserRegistrationModel {
     "gender": gender,
     "birthdate": birthdate,
     "volunteer": volunteer,
-    "cityId": cityId,
+    "CityId": cityId,
     "role": role,
     "emailVerified": emailVerified,
     "createdAt": FieldValue.serverTimestamp(),

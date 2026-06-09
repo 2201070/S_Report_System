@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:s_report_system/features/profile/domain/usecases/get_profile_usecase.dart';
 import 'package:s_report_system/features/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:s_report_system/features/profile/presentation/cubit/profile_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class ProfileCubit extends Cubit<ProfileState> {
   final GetProfileUseCase getProfileUseCase;
@@ -35,6 +37,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     required String address,
   }) async {
     emit(const ProfileLoading());
+    final prefs = await SharedPreferences.getInstance();
+    final cityId = prefs.getInt('cityId') ??29; // 👈
     
     final data = {
       "firstName": firstName,
@@ -42,7 +46,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       "homeAddress": address,
       "email": email,
       "phone": phone,
-      "cityId": 29 
+      "cityId": cityId, // 👈 تأكد من تضمين الـ cityId في البيانات المرسلة للتحديث
     };
     
     final result = await updateProfileUseCase(data); 

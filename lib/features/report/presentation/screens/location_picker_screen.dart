@@ -142,9 +142,11 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               _buildHeader(),
 
               // خانة البحث الصورية - لن تعرض العنوان المكتشف
-              LocationSearchBar(
-                controller: _searchController,
-                onChanged: (val) {},
+              IgnorePointer(
+                child: LocationSearchBar(
+                  controller: _searchController,
+                  onChanged: (val) {},
+                ),
               ),
 
               Expanded(

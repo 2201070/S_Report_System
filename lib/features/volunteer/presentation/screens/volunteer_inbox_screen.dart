@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
@@ -38,19 +39,49 @@ class _VolunteerInboxScreenState extends State<VolunteerInboxScreen> with Single
     )..repeat(reverse: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final profileState = context.read<ProfileCubit>().state;
-      int cityIdToUse = 1; 
-
-      if (profileState is ProfileSuccess) {
-        cityIdToUse = int.tryParse(profileState.user.cityId.toString()) ?? 1;
-      }
-
-      context.read<VolunteerCubit>().getNearbyMissions(
-        lat: 30.0444, 
-        lng: 31.2357, 
-        cityId: cityIdToUse, 
-      );
+      _fetchMissionsWithLocation();
     });
+  }
+
+  // الدالة الجديدة لجلب الموقع الحقيقي
+  Future<void> _fetchMissionsWithLocation() async {
+    final profileState = context.read<ProfileCubit>().state;
+    int cityIdToUse = 1;
+
+    if (profileState is ProfileSuccess) {
+      cityIdToUse = int.tryParse(profileState.user.cityId.toString()) ?? 1;
+    }
+
+    // إحداثيات افتراضية في حالة عدم تفعيل الـ GPS
+    double currentLat = 26.5569; 
+    double currentLng = 31.6948; 
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+          Position position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high);
+          currentLat = position.latitude;
+          currentLng = position.longitude;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error getting location: $e');
+    }
+
+    if (mounted) {
+      context.read<VolunteerCubit>().getNearbyMissions(
+        lat: currentLat,
+        lng: currentLng,
+        cityId: cityIdToUse,
+      );
+    }
   }
 
   @override
@@ -92,6 +123,7 @@ class _VolunteerInboxScreenState extends State<VolunteerInboxScreen> with Single
     );
   }
 
+  // ⚠️ دالة البناء (Build) اللي كانت مفقودة
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -409,8 +409,8 @@ class _CategoryCardState extends State<_CategoryCard>
                         // Icon
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
-                          width: 56,
-                          height: 56,
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
                             color: widget.category.color.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(16),
@@ -434,7 +434,7 @@ class _CategoryCardState extends State<_CategoryCard>
                             child: Icon(
                               widget.category.icon,
                               color: widget.category.color,
-                              size: 28,
+                              size: 24,
                             ),
                           ),
                         ),
@@ -448,7 +448,7 @@ class _CategoryCardState extends State<_CategoryCard>
                                 widget.category.name,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 2,
@@ -474,7 +474,7 @@ class _CategoryCardState extends State<_CategoryCard>
                           widget.category.description,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 13,
+                            fontSize: 11,
                             height: 1.3,
                           ),
                           maxLines: 2,
