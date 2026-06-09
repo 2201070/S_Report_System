@@ -88,7 +88,7 @@ class ReportRemoteDataSourceImpl implements ReportRemoteDataSource {
   Future<ReportDetailsModel> getReportDetails(int id) async {
     try {
       // الـ Interceptor يحقن التوكن تلقائياً هنا لحل مشكلة الـ 403
-      final response = await dio.get('${ApiConstants.baseUrl}/Report/ReportDetails/$id');
+      final response = await dio.get('${ApiConstants.baseUrl}/Report/ReportSummary/$id');
       
       if (response.statusCode == 200) {
         return ReportDetailsModel.fromJson(response.data as Map<String, dynamic>);
