@@ -35,13 +35,16 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
   }
 
   @override
-  Future<List<MissionModel>> getNearbyMissions(
-      {required double lat, required double lng, int cityId = 1}) async {
-    try {
-      final response = await dio.get(
-        '${ApiConstants.baseUrl}/Volunteer/nearby',
-        queryParameters: {'lat': lat, 'lng': lng, 'cityId': cityId},
-      );
+Future<List<MissionModel>> getNearbyMissions(
+    {required double lat, required double lng, int cityId = 1}) async {
+  try {
+    await ApiConstants.getToken(); // ✅
+    final response = await dio.get(
+      '${ApiConstants.baseUrl}/Volunteer/nearby',
+      queryParameters: {'lat': lat, 'lng': lng, 'cityId': cityId},
+      options: ApiConstants.authOptions(), // ✅
+    );
+    // باقي الكود
       if (response.statusCode == 200 && response.data != null) {
         return (response.data as List)
             .map((e) => MissionModel.fromJson(e))
@@ -54,95 +57,102 @@ class VolunteerRemoteDataSourceImpl implements VolunteerRemoteDataSource {
       throw ServerException(message: e.toString());
     }
   }
-
-  @override
-  Future<void> acceptMission(int id) async {
-    try {
-      final response = await dio.post(
-        '${ApiConstants.baseUrl}/Volunteer/AcceptMission',
-        queryParameters: {'missionId': id},
-      );
-      if (response.statusCode != 200 && response.statusCode != 204) {
-         throw ServerException(message: 'Failed to accept mission.');
-      }
-    } on DioException catch (e) {
-      throw _handleError(e);
-    } catch (e) {
-      throw ServerException(message: e.toString());
+@override
+Future<void> acceptMission(int id) async {
+  try {
+    await ApiConstants.getToken();
+    final response = await dio.post(
+      '${ApiConstants.baseUrl}/Volunteer/accept/$id', // ✅ الـ endpoint الصح
+      options: ApiConstants.authOptions(),
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw ServerException(message: 'Failed to accept mission.');
     }
+  } on DioException catch (e) {
+    throw _handleError(e);
+  } catch (e) {
+    throw ServerException(message: e.toString());
   }
+}
 
-  @override
-  Future<void> completeMission(int id) async {
-    try {
-      final response = await dio.post(
-        '${ApiConstants.baseUrl}/Volunteer/complete/$id',
-      );
-      if (response.statusCode != 200 && response.statusCode != 204) {
-         throw ServerException(message: 'Failed to complete mission.');
-      }
-    } on DioException catch (e) {
-      throw _handleError(e);
-    } catch (e) {
-      throw ServerException(message: e.toString());
+@override
+Future<void> completeMission(int id) async {
+  try {
+    await ApiConstants.getToken();
+    final response = await dio.post(
+      '${ApiConstants.baseUrl}/Volunteer/complete/$id',
+      options: ApiConstants.authOptions(), // ✅ صح
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw ServerException(message: 'Failed to complete mission.');
     }
+  } on DioException catch (e) {
+    throw _handleError(e);
+  } catch (e) {
+    throw ServerException(message: e.toString());
   }
+}
 
-  @override
-  Future<void> cancelMission(int id) async {
-    try {
-      final response = await dio.post(
-        '${ApiConstants.baseUrl}/Volunteer/cancel/$id',
-      );
-      if (response.statusCode != 200 && response.statusCode != 204) {
-         throw ServerException(message: 'Failed to cancel mission.');
-      }
-    } on DioException catch (e) {
-      throw _handleError(e);
-    } catch (e) {
-      throw ServerException(message: e.toString());
+@override
+Future<void> cancelMission(int id) async {
+  try {
+    await ApiConstants.getToken(); // ✅ أضف
+    final response = await dio.post(
+      '${ApiConstants.baseUrl}/Volunteer/cancel/$id',
+      options: ApiConstants.authOptions(), // ✅ أضف
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw ServerException(message: 'Failed to cancel mission.');
     }
+  } on DioException catch (e) {
+    throw _handleError(e);
+  } catch (e) {
+    throw ServerException(message: e.toString());
   }
+}
 
-  @override
-  Future<MissionModel?> getCurrentMission() async {
-    try {
-      final response = await dio.get(
-        '${ApiConstants.baseUrl}/Volunteer/current',
-      );
-      if (response.statusCode == 200 && response.data != null) {
-        if (response.data is Map && (response.data as Map).isEmpty) return null;
-        return MissionModel.fromJson(response.data);
-      } else if (response.statusCode == 204) {
-        return null;
-      }
-      throw ServerException(message: 'Failed to fetch current mission.');
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return null;
-      throw _handleError(e);
-    } catch (e) {
-      throw ServerException(message: e.toString());
+@override
+Future<MissionModel?> getCurrentMission() async {
+  try {
+    await ApiConstants.getToken(); // ✅ أضف
+    final response = await dio.get(
+      '${ApiConstants.baseUrl}/Volunteer/current',
+      options: ApiConstants.authOptions(), // ✅ أضف
+    );
+    if (response.statusCode == 200 && response.data != null) {
+      if (response.data is Map && (response.data as Map).isEmpty) return null;
+      return MissionModel.fromJson(response.data);
+    } else if (response.statusCode == 204) {
+      return null;
     }
+    throw ServerException(message: 'Failed to fetch current mission.');
+  } on DioException catch (e) {
+    if (e.response?.statusCode == 404) return null;
+    throw _handleError(e);
+  } catch (e) {
+    throw ServerException(message: e.toString());
   }
+}
 
-  @override
-  Future<List<VolunteerHistoryModel>> getVolunteerHistory() async {
-    try {
-      final response = await dio.get(
-        '${ApiConstants.baseUrl}/Volunteer/History',
-      );
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
-        return data
-            .map((e) =>
-                VolunteerHistoryModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-      }
-      throw ServerException(message: 'Failed to fetch volunteer history.');
-    } on DioException catch (e) {
-      throw _handleError(e);
-    } catch (e) {
-      throw ServerException(message: e.toString());
+@override
+Future<List<VolunteerHistoryModel>> getVolunteerHistory() async {
+  try {
+    await ApiConstants.getToken(); // ✅ أضف
+    final response = await dio.get(
+      '${ApiConstants.baseUrl}/Volunteer/History',
+      options: ApiConstants.authOptions(), // ✅ أضف
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = response.data;
+      return data
+          .map((e) => VolunteerHistoryModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
+    throw ServerException(message: 'Failed to fetch volunteer history.');
+  } on DioException catch (e) {
+    throw _handleError(e);
+  } catch (e) {
+    throw ServerException(message: e.toString());
   }
+}
 }

@@ -12,6 +12,7 @@ import '../widgets/mission_card.dart';
 
 import 'package:s_report_system/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:s_report_system/features/profile/presentation/cubit/profile_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VolunteerInboxScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -45,12 +46,9 @@ class _VolunteerInboxScreenState extends State<VolunteerInboxScreen> with Single
 
   // الدالة الجديدة لجلب الموقع الحقيقي
   Future<void> _fetchMissionsWithLocation() async {
-    final profileState = context.read<ProfileCubit>().state;
-    int cityIdToUse = 1;
+   final prefs = await SharedPreferences.getInstance();
+  int cityIdToUse = prefs.getInt('cityId') ?? 29;
 
-    if (profileState is ProfileSuccess) {
-      cityIdToUse = int.tryParse(profileState.user.cityId.toString()) ?? 1;
-    }
 
     // إحداثيات افتراضية في حالة عدم تفعيل الـ GPS
     double currentLat = 26.5569; 

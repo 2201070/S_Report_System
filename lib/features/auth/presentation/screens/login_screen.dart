@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart'; //
 import 'package:s_report_system/features/auth/presentation/screens/register_screen.dart';
+import '../../../../core/api/api_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_primary_button.dart';
@@ -50,6 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setInt('userId', apiData['userId'] ?? 0);
       await prefs.setString('role', apiData['role'] ?? '');
       await prefs.setInt('cityId', apiData['cityId'] ?? 0);
+        ApiConstants.currentToken = apiData['token'];
+
 
       debugPrint('✅ Token: ${apiData['token']}');
       debugPrint('✅ User: ${apiData['firstName']} - ${apiData['role']}');
