@@ -35,6 +35,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     required String phone,
     required String email,
     required String address,
+    required String password,
   }) async {
     emit(const ProfileLoading());
     final prefs = await SharedPreferences.getInstance();
@@ -47,6 +48,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       "email": email,
       "phone": phone,
       "cityId": cityId, // 👈 تأكد من تضمين الـ cityId في البيانات المرسلة للتحديث
+      "password": password, // 👈 تأكد من تضمين الـ password في البيانات المرسلة للتحديث
     };
     
     final result = await updateProfileUseCase(data); 

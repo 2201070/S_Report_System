@@ -142,7 +142,10 @@
     "reports_submitted": "Reports Submitted",
     "volunteer_hours": "Volunteer Hours",
     "email": "Email Address",
-    "contact_info": "Contact Information"
+    "contact_info": "Contact Information",
+    "edit_profile": "Edit Profile",
+    "save_changes": "Save Changes",
+    "update_success": "Profile updated successfully"
   },
   "alerts": {
     "title": "Public Alerts",
@@ -188,6 +191,8 @@
   "errors": {
     "server": "A server error occurred. Please try again later.",
     "network": "No internet connection. Please check your network.",
-    "cache": "Failed to load cached data."
+    "cache": "Failed to load cached data.",
+    "required_field": "This field is required",
+    "network_error": "A network error occurred. Please check your connection."
   }
 }

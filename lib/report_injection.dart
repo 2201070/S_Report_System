@@ -29,7 +29,7 @@ import 'package:s_report_system/features/profile/data/datasources/profile_remote
 import 'package:s_report_system/features/profile/data/repositories/profile_repository_impl.dart';
 import 'package:s_report_system/features/profile/domain/repositories/i_profile_repository.dart';
 import 'package:s_report_system/features/profile/domain/usecases/get_profile_usecase.dart';
-import 'package:s_report_system/features/profile/domain/usecases/update_profile_usecase.dart'; // ✅ تم الإضافة
+import 'package:s_report_system/features/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:s_report_system/features/profile/presentation/cubit/profile_cubit.dart';
 
 // Volunteer Profile Imports 
@@ -44,9 +44,8 @@ import 'package:s_report_system/features/volunteer/data/datasources/volunteer_re
 import 'package:s_report_system/features/volunteer/data/repositories/volunteer_repository_impl.dart';
 import 'package:s_report_system/features/volunteer/domain/repositories/i_volunteer_repository.dart';
 import 'package:s_report_system/features/volunteer/domain/usecases/volunteer_usecases.dart';
-import 'package:s_report_system/features/volunteer/presentation/cubit/volunteer_cubit.dart';
+import 'package:s_report_system/features/volunteer/presentation/cubit/volunteer_cubit.dart'; // تم تعديل الخطأ هنا
 import 'package:s_report_system/features/volunteer/presentation/cubit/volunteer_history_cubit.dart';
-
 // Leaderboard Feature Imports
 import 'package:s_report_system/features/leaderboard/data/datasources/leaderboard_remote_data_source.dart';
 import 'package:s_report_system/features/leaderboard/data/repositories/leaderboard_repository_impl.dart';
@@ -117,7 +116,7 @@ void initReport() {
   sl.registerLazySingleton(() => GetProfileUseCase(sl<IProfileRepository>()));
   sl.registerLazySingleton(() => UpdateProfileUseCase(sl<IProfileRepository>())); 
 
-  sl.registerFactory(() => ProfileCubit(
+  sl.registerLazySingleton(() => ProfileCubit(
     getProfileUseCase: sl<GetProfileUseCase>(),
     updateProfileUseCase: sl<UpdateProfileUseCase>(), 
   ));
@@ -140,7 +139,6 @@ void initReport() {
   sl.registerLazySingleton<IVolunteerRepository>(
     () => VolunteerRepositoryImpl(remoteDataSource: sl<VolunteerRemoteDataSource>()),
   );
-
   sl.registerLazySingleton(() => GetNearbyMissionsUseCase(sl<IVolunteerRepository>()));
   sl.registerLazySingleton(() => AcceptMissionUseCase(sl<IVolunteerRepository>()));
   sl.registerLazySingleton(() => CompleteMissionUseCase(sl<IVolunteerRepository>()));

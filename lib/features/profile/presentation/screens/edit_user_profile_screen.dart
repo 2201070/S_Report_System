@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:s_report_system/core/theme/app_colors.dart';
 import 'package:s_report_system/features/profile/data/models/user_profile_model.dart';
 import 'package:s_report_system/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:s_report_system/features/profile/presentation/cubit/profile_state.dart';
+import 'package:s_report_system/core/localization/localization_extension.dart';
 
 class EditUserProfileScreen extends StatefulWidget {
   final UserProfileModel user; 
@@ -21,6 +21,8 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _addressController;
+  late TextEditingController _passwordController;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +31,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
     _phoneController = TextEditingController(text: widget.user.phone);
     _emailController = TextEditingController(text: widget.user.email);
     _addressController = TextEditingController(text: widget.user.homeAddress);
+    _passwordController = TextEditingController(); 
   }
 
   @override
@@ -38,6 +41,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _addressController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -49,6 +53,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
             phone: _phoneController.text.trim(),
             email: _emailController.text.trim(),
             address: _addressController.text.trim(),
+            password: _passwordController.text.trim(),
           );
     }
   }
@@ -66,16 +71,15 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'profile.edit_profile'.tr(),
+          'profile.edit_profile'.trWithFallback('Edit Profile'),
           style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
       body: BlocConsumer<ProfileCubit, ProfileState>(
         listener: (context, state) {
-          // ✅ التعديل الجوهري هنا: بنسمع لحالة "نجاح التعديل" فقط
           if (state is ProfileUpdateSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('profile.update_success'.tr())));
+                SnackBar(content: Text('profile.update_success'.trWithFallback('Profile updated successfully'))));
             Navigator.pop(context); 
           } else if (state is ProfileError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -84,7 +88,6 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
         },
         builder: (context, state) {
           final isLoading = state is ProfileLoading;
-
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -108,14 +111,14 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                         controller: _firstNameController,
                         label: 'First Name',
                         icon: Icons.person_outline,
-                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.tr() : null,
+                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.trWithFallback('This field is required') : null,
                       ),
                       const SizedBox(height: 16),
                       _CustomTextField(
                         controller: _secondNameController,
                         label: 'Second Name',
                         icon: Icons.person_outline,
-                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.tr() : null,
+                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.trWithFallback('This field is required') : null,
                       ),
                       const SizedBox(height: 16),
                       _CustomTextField(
@@ -123,7 +126,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                         label: 'Phone Number',
                         icon: Icons.phone_android_rounded,
                         keyboardType: TextInputType.phone,
-                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.tr() : null,
+                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.trWithFallback('This field is required') : null,
                       ),
                       const SizedBox(height: 16),
                       _CustomTextField(
@@ -131,14 +134,22 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                         label: 'Email',
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.tr() : null,
+                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.trWithFallback('This field is required') : null,
                       ),
                       const SizedBox(height: 16),
                       _CustomTextField(
                         controller: _addressController,
                         label: 'Home Address',
                         icon: Icons.home_outlined,
-                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.tr() : null,
+                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.trWithFallback('This field is required') : null,
+                      ),
+                      const SizedBox(height: 16),
+                      _CustomTextField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        icon: Icons.lock_outline,
+                        obscureText: true,
+                        validator: (value) => value == null || value.isEmpty ? 'errors.required_field'.trWithFallback('This field is required') : null,
                       ),
                       const SizedBox(height: 32),
                       SizedBox(
@@ -154,7 +165,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                           ),
                           child: isLoading
                               ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Text('profile.save_changes'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              : Text('profile.save_changes'.trWithFallback('Save Changes'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -175,6 +186,7 @@ class _CustomTextField extends StatelessWidget {
   final IconData icon;
   final TextInputType keyboardType;
   final String? Function(String?) validator;
+  final bool obscureText;
 
   const _CustomTextField({
     required this.controller,
@@ -182,6 +194,7 @@ class _CustomTextField extends StatelessWidget {
     required this.icon,
     this.keyboardType = TextInputType.text,
     required this.validator,
+    this.obscureText = false,
   });
 
   @override
@@ -190,6 +203,7 @@ class _CustomTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
+      obscureText: obscureText,
       style: const TextStyle(color: Color(0xFF1A1A1A)),
       decoration: InputDecoration(
         labelText: label,
