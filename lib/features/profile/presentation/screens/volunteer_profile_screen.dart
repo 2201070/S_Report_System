@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:s_report_system/core/theme/app_colors.dart';
 import 'package:s_report_system/features/profile/presentation/cubit/volunteer_profile_cubit.dart';
 import 'package:s_report_system/features/auth/presentation/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final List<Map<String, dynamic>> allAchievements = [
   {"title": "First Mission", "icon": Icons.flag},
@@ -192,7 +194,42 @@ class VolunteerProfileScreen extends StatelessWidget {
                       icon: Icons.logout,
                       title: 'Sign Out'.tr(),
                       isDestructive: true,
-                      onTap: () => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false),
+                      onTap: () async {
+                                // 🟢 1. إظهار مؤشر تحميل (اختياري)
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.accentRed)),
+                                );
+
+                                try {
+                                  // 🟢 2. مسح بيانات المستخدم المحفوظة في الذاكرة
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await prefs.clear(); // سيمسح الـ userId والـ token وأي بيانات أخرى
+
+                                  // 🟢 3. تسجيل الخروج من Firebase
+                                  await FirebaseAuth.instance.signOut();
+
+                                  if (context.mounted) {
+                                    // إخفاء مؤشر التحميل
+                                    Navigator.pop(context); 
+                                    
+                                    // 🛑 استبدل Scaffold() باسم شاشة اللوجين الخاصة بك (مثل LoginScreen)
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const LoginScreen()), 
+                                      (Route<dynamic> route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    Navigator.pop(context); // إخفاء مؤشر التحميل في حالة الخطأ
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('حدث خطأ أثناء تسجيل الخروج: $e'), backgroundColor: Colors.red),
+                                    );
+                                  }
+                                }
+                              },
                     ),
                   ],
                 ),

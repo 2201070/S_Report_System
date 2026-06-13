@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // ✅ تم الإضافة لمسح البيانات
+import 'package:firebase_auth/firebase_auth.dart'; // ✅ تم الإضافة لتسجيل الخروج من فايربيز
+
 import 'package:s_report_system/core/theme/app_colors.dart';
 import 'package:s_report_system/core/theme/app_text_styles.dart';
 import 'package:s_report_system/core/localization/language_manager.dart';
@@ -11,6 +14,9 @@ import 'package:s_report_system/features/settings/presentation/widgets/settings_
 import 'package:s_report_system/features/settings/presentation/widgets/custom_switch.dart';
 
 import 'package:s_report_system/features/volunteer/presentation/cubit/volunteer_cubit.dart';
+
+// 🛑 قم بتعديل هذا المسار ليتطابق مع مسار شاشة تسجيل الدخول الخاصة بك
+ import 'package:s_report_system/features/auth/presentation/screens/login_screen.dart'; 
 
 class SettingsScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -276,8 +282,41 @@ class SettingsScreen extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: InkWell(
-                              onTap: () {
-                                debugPrint('Log Out sequence');
+                              onTap: () async {
+                                // 🟢 1. إظهار مؤشر تحميل (اختياري)
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.accentRed)),
+                                );
+
+                                try {
+                                  // 🟢 2. مسح بيانات المستخدم المحفوظة في الذاكرة
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await prefs.clear(); // سيمسح الـ userId والـ token وأي بيانات أخرى
+
+                                  // 🟢 3. تسجيل الخروج من Firebase
+                                  await FirebaseAuth.instance.signOut();
+
+                                  if (context.mounted) {
+                                    // إخفاء مؤشر التحميل
+                                    Navigator.pop(context); 
+                                    
+                                    // 🛑 استبدل Scaffold() باسم شاشة اللوجين الخاصة بك (مثل LoginScreen)
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const LoginScreen()), 
+                                      (Route<dynamic> route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    Navigator.pop(context); // إخفاء مؤشر التحميل في حالة الخطأ
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('حدث خطأ أثناء تسجيل الخروج: $e'), backgroundColor: Colors.red),
+                                    );
+                                  }
+                                }
                               },
                               borderRadius: BorderRadius.circular(16),
                               child: AnimatedContainer(

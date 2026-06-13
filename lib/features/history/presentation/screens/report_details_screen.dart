@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:s_report_system/core/theme/app_colors.dart';
-import 'package:s_report_system/features/report/data/models/report_details_model.dart'; // ✅ تم التعديل
+import 'package:s_report_system/features/report/data/models/report_details_model.dart'; 
 import 'package:s_report_system/features/report/domain/usecases/get_report_details_usecase.dart';
 import 'package:s_report_system/features/report/domain/usecases/cancel_report_usecase.dart';
 
@@ -18,7 +18,7 @@ class ReportDetailsScreen extends StatefulWidget {
 class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   bool _loading = true;
   String? _error;
-  ReportDetailsModel? _report; // ✅ تم التعديل
+  ReportDetailsModel? _report; 
   bool _isCancelling = false;
 
   @override
@@ -174,19 +174,34 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Media Gallery
+          // 🟢 بداية عرض الصور الحقيقية بعد معالجة الروابط الناقصة
           if (report.attachedMedia.isNotEmpty)
             SizedBox(
               height: 220,
               child: PageView.builder(
                 itemCount: report.attachedMedia.length,
-                itemBuilder: (context, i) {
+              itemBuilder: (context, i) {
+                  // 1. جلب الرابط من المصفوفة
+                  String imageUrl = report.attachedMedia[i];
+                  
+                  // 2. تنظيف المسار (تبديل الـ \ بـ / وحذف الـ ~ لو موجودة)
+                  imageUrl = imageUrl.replaceAll(r'\', '/').replaceAll('~', '');
+                  
+                  // 3. معالجة الرابط إذا كان مساراً ناقصاً
+                  if (!imageUrl.startsWith('http')) {
+                    const baseUrl = 'https://abdallahnasrat-001-site1.anytempurl.com';
+                    imageUrl = imageUrl.startsWith('/') ? '$baseUrl$imageUrl' : '$baseUrl/$imageUrl';
+                  }
+
+                  // 4. السطر ده مهم جداً: هيطبع الرابط النهائي في شاشة الـ Run
+                  debugPrint('🛠️ FINAL IMAGE URL: $imageUrl');
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: CachedNetworkImage(
-                        imageUrl: report.attachedMedia[i],
+                        imageUrl: imageUrl, 
                         fit: BoxFit.cover,
                         placeholder: (_, __) => Container(
                             color: AppColors.borderPrimary,
@@ -195,7 +210,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                                     color: AppColors.accentBlue))),
                         errorWidget: (_, __, ___) => Container(
                           color: AppColors.borderPrimary,
-                          child: const Icon(Icons.image_not_supported,
+                          child: const Icon(Icons.broken_image, // غيرت الأيقونة عشان نميزها
                               color: Colors.white38, size: 48),
                         ),
                       ),
@@ -215,6 +230,8 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                   child: Icon(Icons.image_not_supported,
                       color: Colors.white38, size: 48)),
             ),
+          // 🟢 نهاية التعديل
+
           const SizedBox(height: 20),
 
           // Info Card
@@ -235,7 +252,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                       child: Text(
                         report.reportType.isNotEmpty
                             ? report.reportType
-                            : 'Report #${report.reportId}', // ✅ تم التعديل
+                            : 'Report #${report.reportId}', 
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -252,7 +269,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                             color: stateColor.withValues(alpha: 0.5)),
                       ),
                       child: Text(
-                        report.reportState, // ✅ تم التعديل
+                        report.reportState, 
                         style: TextStyle(
                             color: stateColor,
                             fontWeight: FontWeight.w700,
@@ -269,7 +286,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                     report.description),
                 _infoRow(Icons.calendar_today_outlined, 'Date', report.date),
                 _infoRow(Icons.confirmation_number_outlined, 'Report ID',
-                    '#${report.reportId}'), // ✅ تم التعديل
+                    '#${report.reportId}'), 
                 _infoRow(Icons.location_on_outlined, 'Coordinates',
                     'Lat: ${report.latitude.toStringAsFixed(5)}, Lng: ${report.longitude.toStringAsFixed(5)}'),
                 if (report.attachedMedia.isNotEmpty)

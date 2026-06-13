@@ -13,9 +13,21 @@ class MissionModel extends VolunteerTaskEntity {
     required super.distanceInMeters,
     required super.createdAt,
     super.acceptedAt,
+    required super.attachedMedia,
   });
 
   factory MissionModel.fromJson(Map<String, dynamic> json) {
+    List<String> extractedMediaUrls = [];
+    if (json['attachedMedia'] != null && json['attachedMedia'] is List) {
+      for (var item in json['attachedMedia']) {
+        if (item is Map && item['fileURL'] != null) {
+          extractedMediaUrls.add(item['fileURL'].toString());
+        } else if (item is String) {
+          // إضافة هذا الاحتمال في حال كان السيرفر يرسل الروابط كنصوص مباشرة
+          extractedMediaUrls.add(item);
+        }
+      }
+    }
     return MissionModel(
       reportId: json['reportId'] is num ? (json['reportId'] as num).toInt() : int.tryParse(json['reportId']?.toString() ?? '0') ?? 0,
       description: json['description']?.toString() ?? 'No Description',
@@ -26,6 +38,7 @@ class MissionModel extends VolunteerTaskEntity {
       distanceInMeters: json['distanceInMeters'] is num ? (json['distanceInMeters'] as num).toDouble() : double.tryParse(json['distanceInMeters']?.toString() ?? '0') ?? 0.0,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
       acceptedAt: json['acceptedAt'] != null ? DateTime.parse(json['acceptedAt']) : null,
+      attachedMedia: extractedMediaUrls,
     );
   }
 }

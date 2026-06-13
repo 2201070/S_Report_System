@@ -4,11 +4,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:s_report_system/core/theme/app_colors.dart';
 import 'package:s_report_system/core/theme/app_text_styles.dart';
 import 'package:s_report_system/features/volunteer/domain/entities/volunteer_task_entity.dart';
-import 'package:s_report_system/features/volunteer/data/models/mission_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:s_report_system/features/volunteer/presentation/cubit/volunteer_cubit.dart';
 import 'package:s_report_system/features/volunteer/presentation/cubit/volunteer_state.dart';
 import 'package:s_report_system/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:s_report_system/features/profile/presentation/cubit/profile_state.dart';
 
 class MissionDetailsScreen extends StatefulWidget {
   final VolunteerTaskEntity mission;
@@ -27,18 +27,6 @@ class MissionDetailsScreen extends StatefulWidget {
 class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
   final PageController _pageController = PageController();
   int _currentImageIndex = 0;
-
-  late final List<String> _dummyImages;
-
-  @override
-  void initState() {
-    super.initState();
-    _dummyImages = [
-      MissionModel.placeholderImage,
-      MissionModel.placeholderImage,
-      MissionModel.placeholderImage,
-    ];
-  }
 
   @override
   void dispose() {
@@ -64,6 +52,13 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
 
   void _showConfirmationModal(bool isAccepting) {
     final cubit = context.read<VolunteerCubit>();
+    
+    final profileState = context.read<ProfileCubit>().state;
+    int currentCityId = 29; 
+    if (profileState is ProfileSuccess) {
+      currentCityId = profileState.user.cityId;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -128,7 +123,6 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        // ✅ التعديل هنا: الـ Text بداخل الـ OutlinedButton
                         child: Text(
                           'reporting.cancel'.tr(),
                           style: const TextStyle(
@@ -157,7 +151,7 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                                   widget.mission.reportId,
                                   lat: widget.mission.latitude,
                                   lng: widget.mission.longitude,
-                                  cityId: 1, 
+                                  cityId: currentCityId, 
                                 );
                               }
                             },
@@ -299,76 +293,113 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: 250,
-                          child: Stack(
-                            children: [
-                              PageView.builder(
-                                controller: _pageController,
-                                onPageChanged: (index) {
-                                  setState(() {
-                                    _currentImageIndex = index;
-                                  });
-                                },
-                                itemCount: _dummyImages.length,
-                                itemBuilder: (context, index) {
-                                  return Image.network(
-                                    _dummyImages[index],
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: AppColors.surfacePrimary,
-                                        child: const Center(
-                                          child: Icon(Icons.image_not_supported, color: AppColors.textSecondary, size: 48),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                              Positioned(
-                                top: 16,
-                                right: 16,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    '${_currentImageIndex + 1} / ${_dummyImages.length}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                        
+                        // 🟢 بداية عرض الصور الحقيقية بعد معالجة الروابط الناقصة
+                        if (widget.mission.attachedMedia.isNotEmpty)
+                          SizedBox(
+                            height: 250,
+                            child: Stack(
+                              children: [
+                                PageView.builder(
+                                  controller: _pageController,
+                                  onPageChanged: (index) {
+                                    setState(() {
+                                      _currentImageIndex = index;
+                                    });
+                                  },
+                                  itemCount: widget.mission.attachedMedia.length,
+                                  itemBuilder: (context, index) {
+                                    // جلب الرابط من المصفوفة
+                                    String imageUrl = widget.mission.attachedMedia[index];
+                                                                        debugPrint('Original media URL: ${widget.mission.attachedMedia[index]}');
+
+                                    
+                                    // معالجة الرابط إذا كان مساراً ناقصاً (Relative Path)
+                                    if (!imageUrl.startsWith('http')) {
+                                      const baseUrl = 'https://abdallahnasrat-001-site1.anytempurl.com';
+                                      imageUrl = imageUrl.startsWith('/') ? '$baseUrl$imageUrl' : '$baseUrl/$imageUrl';
+                                    }
+
+                                    return Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          color: AppColors.surfacePrimary,
+                                          child: const Center(
+                                            child: Icon(Icons.broken_image, color: AppColors.textSecondary, size: 48),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
                                 ),
-                              ),
-                              Positioned(
-                                bottom: 16,
-                                left: 0,
-                                right: 0,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(
-                                    _dummyImages.length,
-                                    (index) => Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                                      width: _currentImageIndex == index ? 24 : 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: _currentImageIndex == index ? AppColors.accentBlue : Colors.white.withValues(alpha: 0.5),
-                                        borderRadius: BorderRadius.circular(4),
+                                Positioned(
+                                  top: 16,
+                                  right: 16,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.5),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Text(
+                                      '${_currentImageIndex + 1} / ${widget.mission.attachedMedia.length}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                Positioned(
+                                  bottom: 16,
+                                  left: 0,
+                                  right: 0,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      widget.mission.attachedMedia.length,
+                                      (index) => Container(
+                                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                                        width: _currentImageIndex == index ? 24 : 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _currentImageIndex == index ? AppColors.accentBlue : Colors.white.withValues(alpha: 0.5),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            height: 200,
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfacePrimary.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.borderPrimary),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.image_not_supported_outlined, color: AppColors.textSecondary.withValues(alpha: 0.5), size: 48),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'لا توجد صور مرفقة',
+                                  style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.7)),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                        
+                        // 🟢 نهاية عرض الصور
+
                         Padding(
                           padding: const EdgeInsets.all(24.0),
                           child: Column(
@@ -485,27 +516,27 @@ class _MissionDetailsScreenState extends State<MissionDetailsScreen> {
                   child: Row(
                     children: [
                       if (widget.mission.status == 'Accepted') ...[
-        Expanded(
-          flex: 1,
-          child: OutlinedButton.icon(
-            onPressed: () => _showConfirmationModal(false),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.accentRed.withValues(alpha: 0.5)),
-              backgroundColor: AppColors.surfacePrimary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            icon: const Icon(Icons.close, color: AppColors.accentRed, size: 20),
-            label: Text(
-              'volunteer.decline'.tr(),
-              style: const TextStyle(color: AppColors.accentRed, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-      ],
+                        Expanded(
+                          flex: 1,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _showConfirmationModal(false),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: AppColors.accentRed.withValues(alpha: 0.5)),
+                              backgroundColor: AppColors.surfacePrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            icon: const Icon(Icons.close, color: AppColors.accentRed, size: 20),
+                            label: Text(
+                              'volunteer.decline'.tr(),
+                              style: const TextStyle(color: AppColors.accentRed, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                      ],
                       Expanded(
                         flex: 2,
                         child: ElevatedButton.icon(

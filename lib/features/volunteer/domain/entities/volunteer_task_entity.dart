@@ -10,6 +10,7 @@ class VolunteerTaskEntity extends Equatable {
   final double distanceInMeters;
   final DateTime createdAt;
   final DateTime? acceptedAt;
+  final List<String> attachedMedia;
 
   const VolunteerTaskEntity({
     required this.reportId,
@@ -21,6 +22,7 @@ class VolunteerTaskEntity extends Equatable {
     required this.distanceInMeters,
     required this.createdAt,
     this.acceptedAt,
+    required this.attachedMedia,
   });
 
   VolunteerTaskEntity copyWith({
@@ -33,6 +35,7 @@ class VolunteerTaskEntity extends Equatable {
     double? distanceInMeters,
     DateTime? createdAt,
     DateTime? acceptedAt,
+    List<String>? attachedMedia,
   }) {
     return VolunteerTaskEntity(
       reportId: reportId ?? this.reportId,
@@ -44,6 +47,7 @@ class VolunteerTaskEntity extends Equatable {
       distanceInMeters: distanceInMeters ?? this.distanceInMeters,
       createdAt: createdAt ?? this.createdAt,
       acceptedAt: acceptedAt ?? this.acceptedAt,
+      attachedMedia: attachedMedia ?? this.attachedMedia,
     );
   }
 
@@ -58,5 +62,6 @@ class VolunteerTaskEntity extends Equatable {
         distanceInMeters,
         createdAt,
         acceptedAt,
+        attachedMedia,  
       ];
 }
