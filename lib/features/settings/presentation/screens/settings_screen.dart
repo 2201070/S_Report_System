@@ -1,12 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ✅ تم الإضافة لمسح البيانات
-import 'package:firebase_auth/firebase_auth.dart'; // ✅ تم الإضافة لتسجيل الخروج من فايربيز
-
 import 'package:s_report_system/core/theme/app_colors.dart';
 import 'package:s_report_system/core/theme/app_text_styles.dart';
 import 'package:s_report_system/core/localization/language_manager.dart';
+import 'package:s_report_system/features/auth/presentation/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // ✅ تم الإضافة لمسح البيانات
+
 
 import 'package:s_report_system/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:s_report_system/features/settings/presentation/cubit/settings_state.dart';
@@ -14,9 +15,8 @@ import 'package:s_report_system/features/settings/presentation/widgets/settings_
 import 'package:s_report_system/features/settings/presentation/widgets/custom_switch.dart';
 
 import 'package:s_report_system/features/volunteer/presentation/cubit/volunteer_cubit.dart';
-
-// 🛑 قم بتعديل هذا المسار ليتطابق مع مسار شاشة تسجيل الدخول الخاصة بك
- import 'package:s_report_system/features/auth/presentation/screens/login_screen.dart'; 
+import 'package:s_report_system/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:s_report_system/features/profile/presentation/cubit/profile_state.dart';
 
 class SettingsScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -81,207 +81,178 @@ class SettingsScreen extends StatelessWidget {
 
               // Content
               Expanded(
-                child: BlocBuilder<SettingsCubit, SettingsState>(
-                  builder: (context, state) {
-                    if (state is! SettingsLoaded) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                // 🛡 مراقبة حالة الحساب
+                child: BlocBuilder<ProfileCubit, ProfileState>(
+                  builder: (context, profileState) {
+                    final isBlocked = profileState is ProfileSuccess ? profileState.user.rate < 2 : false;
 
-                    final settings = state.settings;
+                    return BlocBuilder<SettingsCubit, SettingsState>(
+                      builder: (context, state) {
+                        if (state is! SettingsLoaded) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
 
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // نمرر قيمة الإعدادات للـ Widget
-                          _buildVolunteerModeCard(context, settings.isVolunteerMode),
+                        final settings = state.settings;
 
-                          // Account Settings
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'settings.account_settings'.tr(),
-                                  style: AppTextStyles.sectionTitle,
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              
+                              _buildVolunteerModeCard(context, settings.isVolunteerMode, isBlocked),
+                              // Account Settings
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('settings.account_settings'.tr(), style: AppTextStyles.sectionTitle),
+                                    const SizedBox(height: 16),
+                                    SettingsTile(
+                                      icon: Icons.person_outline,
+                                      label: 'settings.profile_info'.tr(),
+                                      description: 'settings.profile_info_desc'.tr(),
+                                      onClick: () {},
+                                    ),
+                                    const SizedBox(height: 12),
+                                    SettingsTile(
+                                      icon: Icons.lock_outline,
+                                      label: 'settings.password_security'.tr(),
+                                      description: 'settings.password_security_desc'.tr(),
+                                      onClick: () {},
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 16),
-                                SettingsTile(
-                                  icon: Icons.person_outline,
-                                  label: 'settings.profile_info'.tr(),
-                                  description: 'settings.profile_info_desc'.tr(),
-                                  onClick: () {},
-                                ),
-                                const SizedBox(height: 12),
-                                SettingsTile(
-                                  icon: Icons.lock_outline,
-                                  label: 'settings.password_security'.tr(),
-                                  description: 'settings.password_security_desc'.tr(),
-                                  onClick: () {},
-                                ),
-                              ],
-                            ),
-                          ),
+                              ),
 
-                          // Privacy
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'settings.privacy'.tr(),
-                                  style: AppTextStyles.sectionTitle,
+                              // Privacy
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('settings.privacy'.tr(), style: AppTextStyles.sectionTitle),
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfacePrimary,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: AppColors.borderPrimary),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'settings.data_sharing'.tr(),
+                                                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  'settings.data_sharing_desc'.tr(),
+                                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          CustomSwitch(
+                                            enabled: settings.dataSharing,
+                                            onChange: (val) => context.read<SettingsCubit>().toggleDataSharing(val),
+                                          ),
+                                        ],
+                                      ),
+                                      ),
+                                  ],
                                 ),
-                                const SizedBox(height: 16),
-                                Container(
+                              ),
+
+                              // Notification Preferences
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('settings.notifications'.tr(), style: AppTextStyles.sectionTitle),
+                                    const SizedBox(height: 16),
+                                    _buildNotificationToggle(
+                                      icon: Icons.notifications_active_outlined,
+                                      title: 'settings.push_notifications'.tr(),
+                                      subtitle: 'settings.push_notifications_desc'.tr(),
+                                      enabled: settings.pushNotifications,
+                                      onChange: (val) => context.read<SettingsCubit>().togglePushNotifications(val),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildNotificationToggle(
+                                      icon: Icons.chat_bubble_outline,
+                                      title: 'settings.sms_notifications'.tr(),
+                                      subtitle: 'settings.sms_notifications_desc'.tr(),
+                                      enabled: settings.smsNotifications,
+                                      onChange: (val) => context.read<SettingsCubit>().toggleSmsNotifications(val),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Language Selection
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('settings.language'.tr(), style: AppTextStyles.sectionTitle),
+                                    const SizedBox(height: 16),
+                                    _buildLanguageSelectionButton(
+                                      label: 'English',
+                                      value: 'english',
+                                      currentValue: settings.language,
+                                      onChanged: (val) {
+                                        context.read<SettingsCubit>().updateLanguage(val);
+                                        LanguageManager.changeLanguage(context, LanguageManager.english);
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildLanguageSelectionButton(
+                                      label: 'العربية (Arabic)',
+                                      value: 'arabic',
+                                      currentValue: settings.language,
+                                      onChanged: (val) {
+                                        context.read<SettingsCubit>().updateLanguage(val);
+                                        LanguageManager.changeLanguage(context, LanguageManager.arabic);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // App Info
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                                child: Container(
+                                  width: double.infinity,
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
                                     color: AppColors.surfacePrimary,
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(color: AppColors.borderPrimary),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  child: Column(
                                     children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'settings.data_sharing'.tr(),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              'settings.data_sharing_desc'.tr(),
-                                              style: const TextStyle(
-                                                color: AppColors.textSecondary,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      CustomSwitch(
-                                        enabled: settings.dataSharing,
-                                        onChange: (val) => context.read<SettingsCubit>().toggleDataSharing(val),
-                                      ),
+                                      Text('settings.app_version'.tr(), style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                                      const SizedBox(height: 4),
+                                      const Text('v2.4.0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 16)),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-
-                          // Notification Preferences
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'settings.notifications'.tr(),
-                                  style: AppTextStyles.sectionTitle,
-                                ),
-                                const SizedBox(height: 16),
-                                _buildNotificationToggle(
-                                  icon: Icons.notifications_active_outlined,
-                                  title: 'settings.push_notifications'.tr(),
-                                  subtitle: 'settings.push_notifications_desc'.tr(),
-                                  enabled: settings.pushNotifications,
-                                  onChange: (val) => context.read<SettingsCubit>().togglePushNotifications(val),
-                                ),
-                                const SizedBox(height: 12),
-                                _buildNotificationToggle(
-                                  icon: Icons.chat_bubble_outline,
-                                  title: 'settings.sms_notifications'.tr(),
-                                  subtitle: 'settings.sms_notifications_desc'.tr(),
-                                  enabled: settings.smsNotifications,
-                                  onChange: (val) => context.read<SettingsCubit>().toggleSmsNotifications(val),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Language Selection
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'settings.language'.tr(),
-                                  style: AppTextStyles.sectionTitle,
-                                ),
-                                const SizedBox(height: 16),
-                                _buildLanguageSelectionButton(
-                                  label: 'English',
-                                  value: 'english',
-                                  currentValue: settings.language,
-                                  onChanged: (val) {
-                                    context.read<SettingsCubit>().updateLanguage(val);
-                                    LanguageManager.changeLanguage(context, LanguageManager.english);
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                                _buildLanguageSelectionButton(
-                                  label: 'العربية (Arabic)',
-                                  value: 'arabic',
-                                  currentValue: settings.language,
-                                  onChanged: (val) {
-                                    context.read<SettingsCubit>().updateLanguage(val);
-                                    LanguageManager.changeLanguage(context, LanguageManager.arabic);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // App Info
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfacePrimary,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.borderPrimary),
                               ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'settings.app_version'.tr(),
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'v2.4.0',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
 
-                          // Logout Button
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: InkWell(
+                              // Logout Button
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                                child:  InkWell(
                               onTap: () async {
                                 // 🟢 1. إظهار مؤشر تحميل (اختياري)
                                 showDialog(
@@ -318,40 +289,34 @@ class SettingsScreen extends StatelessWidget {
                                   }
                                 }
                               },
-                              borderRadius: BorderRadius.circular(16),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: AppColors.accentRed.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.accentRed),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.logout,
-                                      color: AppColors.accentRed,
-                                      size: 20,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentRed.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: AppColors.accentRed),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'settings.log_out'.tr(),
-                                      style: const TextStyle(
-                                        color: AppColors.accentRed,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.logout, color: AppColors.accentRed, size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'settings.log_out'.tr(),
+                                          style: const TextStyle(color: AppColors.accentRed, fontWeight: FontWeight.bold, fontSize: 16),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -362,7 +327,6 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildNotificationToggle({
     required IconData icon,
     required String title,
@@ -387,30 +351,14 @@ class SettingsScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
-                  ),
+                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 16)),
                   const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
+                  Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
                 ],
               ),
             ],
           ),
-          CustomSwitch(
-            enabled: enabled,
-            onChange: onChange,
-          ),
+          CustomSwitch(enabled: enabled, onChange: onChange),
         ],
       ),
     );
@@ -423,7 +371,6 @@ class SettingsScreen extends StatelessWidget {
     required ValueChanged<String> onChanged,
   }) {
     final bool isSelected = currentValue == value;
-
     return InkWell(
       onTap: () => onChanged(value),
       borderRadius: BorderRadius.circular(16),
@@ -433,48 +380,25 @@ class SettingsScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.accentBlue.withValues(alpha: 0.1) : AppColors.surfacePrimary,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.accentBlue : AppColors.borderPrimary,
-          ),
+          border: Border.all(color: isSelected ? AppColors.accentBlue : AppColors.borderPrimary),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.language,
-                  color: AppColors.accentBlue,
-                  size: 20,
-                ),
+                const Icon(Icons.language, color: AppColors.accentBlue, size: 20),
                 const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                  ),
-                ),
+                Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 16)),
               ],
             ),
             if (isSelected)
               Container(
                 width: 24,
                 height: 24,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentBlue,
-                  shape: BoxShape.circle,
-                ),
+                decoration: const BoxDecoration(color: AppColors.accentBlue, shape: BoxShape.circle),
                 child: Center(
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
                 ),
               ),
           ],
@@ -482,8 +406,7 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildVolunteerModeCard(BuildContext context, bool isVolunteerMode) {
+  Widget _buildVolunteerModeCard(BuildContext context, bool isVolunteerMode, bool isBlocked) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       child: Container(
@@ -491,13 +414,9 @@ class SettingsScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF161B22),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF30363D)),
+          border: Border.all(color: isBlocked ? AppColors.accentRed.withValues(alpha: 0.3) : const Color(0xFF30363D)),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 5)),
           ],
         ),
         child: Column(
@@ -506,48 +425,57 @@ class SettingsScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text('Volunteer Mode', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
                     Text(
-                      'Volunteer Mode',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Activate to see missions',
-                      style: TextStyle(
-                        color: Color(0xFF8B949E),
-                        fontSize: 14,
-                      ),
+                      isBlocked ? 'Not available for your account' : 'Activate to see missions',
+                      style: TextStyle(color: isBlocked ? AppColors.accentRed.withValues(alpha: 0.7) : const Color(0xFF8B949E), fontSize: 14),
                     ),
                   ],
                 ),
                 Switch.adaptive(
-                  value: isVolunteerMode,
+                  value: isBlocked ? false : isVolunteerMode, 
                   activeColor: const Color(0xFF00BCD4),
-                  onChanged: (value) {
-                    context.read<SettingsCubit>().toggleVolunteerMode(value);
-                    
-                    try {
-                      context.read<VolunteerCubit>().toggleVolunteerMode(value);
-                    } catch (_) {}
-                  },
+                  onChanged: isBlocked 
+                    ? null 
+                    : (value) {
+                        context.read<SettingsCubit>().toggleVolunteerMode(value);
+                        try {
+                          context.read<VolunteerCubit>().toggleVolunteerMode(value);
+                        } catch (_) {}
+                      },
                 ),
               ],
             ),
-            if (isVolunteerMode) ...[
+            
+            if (isVolunteerMode && !isBlocked) ...[
               const SizedBox(height: 16),
-              const Text(
-                'Online and accepting missions',
-                style: TextStyle(
-                  color: Color(0xFF00BCD4),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+              const Text('Online and accepting missions', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 14, fontWeight: FontWeight.w600)),
+            ],
+
+            if (isBlocked) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.accentRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.accentRed.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: AppColors.accentRed, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'settings.volunteer_blocked_desc'.tr(),
+                        style: const TextStyle(color: AppColors.accentRed, fontSize: 13, height: 1.4),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ]

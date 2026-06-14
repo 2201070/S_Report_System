@@ -12,6 +12,7 @@ class UserProfileModel extends Equatable {
   final String email;
   final bool volunteer;
   final int cityId;
+  final int rate; 
 
   const UserProfileModel({
     required this.nationalId,
@@ -25,6 +26,7 @@ class UserProfileModel extends Equatable {
     required this.email,
     required this.volunteer,
     required this.cityId,
+    required this.rate,
   });
 
   String get fullName => '$firstName $secondName'.trim();
@@ -42,12 +44,13 @@ class UserProfileModel extends Equatable {
       email: json['email']?.toString() ?? '',
       volunteer: json['volunteer'] as bool? ?? false,
       cityId: (json['cityId'] as num?)?.toInt() ?? 0,
+      rate: (json['rate'] as num?)?.toInt() ?? 0, 
     );
   }
 
   @override
   List<Object?> get props => [
         nationalId, firstName, secondName, points,
-        gender, birthdate, homeAddress, phone, email, volunteer, cityId,
+        gender, birthdate, homeAddress, phone, email, volunteer, cityId, rate,
       ];
 }

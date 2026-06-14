@@ -48,8 +48,13 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       cityId: cityId ,// 👈 إرفاق المدينة هنا
     );
     
-    context.read<ReportCubit>().submitReport(finalReport);
+        final profileState = context.read<ProfileCubit>().state;
+final int userRate = profileState is ProfileSuccess ? profileState.user.rate : 0;
 
+context.read<ReportCubit>().submitReport(
+  userRate: userRate, 
+  overrideReport: finalReport,
+);
   }
 
   String _getCategoryName(String id) {

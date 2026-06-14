@@ -96,9 +96,11 @@ class _StartReportButtonState extends State<StartReportButton> with SingleTicker
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min, 
+
                 children: [
-                   const Icon(Icons.add, color: AppColors.textPrimary, size: 48),
-                   const SizedBox(height: 8),
+                   const Icon(Icons.add, color: AppColors.textPrimary, size: 36),
+                   const SizedBox(height: 4),
                    Text('reporting.start_report'.tr().split(' ').first, style: AppTextStyles.startButtonLabel),
                    Text('reporting.start_report'.tr().replaceAll('reporting.start_report'.tr().split(' ').first, '').trim(), style: AppTextStyles.startButtonLabel),
                 ],

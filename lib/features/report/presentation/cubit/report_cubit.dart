@@ -10,14 +10,13 @@ class ReportCubit extends Cubit<ReportState> {
   final SubmitReportUseCase submitReportUseCase;
   final SyncOfflineReportsUseCase syncOfflineReportsUseCase;
 
-  // ── Draft data accumulated across the multi-step flow ──
   String? _draftCategory;
   List<String> _draftImages = [];
   String _draftDescription = '';
   double _draftLat = 0.0;
   double _draftLng = 0.0;
   String? _draftVoicePath;
-  int _draftCityId = 1; // 👈 1. إضافة المتغير الخاص بالمدينة
+  int _draftCityId = 1; 
 
   String? get draftCategory => _draftCategory;
   List<String> get draftImages => List.unmodifiable(_draftImages);
@@ -25,14 +24,13 @@ class ReportCubit extends Cubit<ReportState> {
   double get draftLat => _draftLat;
   double get draftLng => _draftLng;
   String? get draftVoicePath => _draftVoicePath;
-  int get draftCityId => _draftCityId; // 👈 2. إضافة الـ Getter
+  int get draftCityId => _draftCityId; 
 
   ReportCubit({
     required this.submitReportUseCase,
     required this.syncOfflineReportsUseCase,
   }) : super(const ReportInitial());
 
-  // ── Draft setters called by Add Evidence / Location Picker screens ──
   void updateCategory(String categoryId) => _draftCategory = categoryId;
 
   void addImages(List<String> paths) {
@@ -48,11 +46,15 @@ class ReportCubit extends Cubit<ReportState> {
 
   void updateVoicePath(String path) => _draftVoicePath = path;
 
-  // 👈 3. دالة لتحديث المدينة من الـ UI
   void updateCityId(int cityId) => _draftCityId = cityId; 
 
-  // ── Final submission ──
-  Future<void> submitReport([CreateReportModel? overrideReport]) async {
+  Future<void> submitReport({int userRate = 0, CreateReportModel? overrideReport}) async {
+    
+    if (userRate < 2) {
+      emit(const ReportError(message: "Your account is temporarily restricted from submitting reports due to repeated inaccurate submissions."));
+      return;
+    }
+
     emit(const ReportLoading());
 
     final report = overrideReport ??
@@ -61,7 +63,7 @@ class ReportCubit extends Cubit<ReportState> {
           latitude: _draftLat,
           longitude: _draftLng,
           reportType: _draftCategory ?? 'environmental',
-          cityId: _draftCityId, // 👈 4. تمرير المتغير للـ Model هنا بدلاً من تركه فارغاً
+          cityId: _draftCityId, 
           imageFiles: _draftImages,
           voiceFile: _draftVoicePath,
         );
@@ -74,16 +76,11 @@ class ReportCubit extends Cubit<ReportState> {
     );
   }
 
-  // ── Offline Sync ──
   Future<void> syncOfflineReports() async {
     debugPrint('CUBIT_DEBUG: Attempting to sync offline reports...');
-    
     final result = await syncOfflineReportsUseCase();
-    
     result.fold(
-      (failure) {
-        debugPrint('CUBIT_DEBUG: Sync Failed -> ${failure.errorMessage}');
-      },
+      (failure) => debugPrint('CUBIT_DEBUG: Sync Failed -> ${failure.errorMessage}'),
       (syncResponse) {
         if (syncResponse.successCount > 0) {
           debugPrint('CUBIT_DEBUG: Successfully synced ${syncResponse.successCount} reports!');
@@ -95,7 +92,6 @@ class ReportCubit extends Cubit<ReportState> {
     );
   }
 
-  /// Reset all draft data and state.
   void reset() {
     _draftCategory = null;
     _draftImages = [];
@@ -103,7 +99,7 @@ class ReportCubit extends Cubit<ReportState> {
     _draftLat = 0.0;
     _draftLng = 0.0;
     _draftVoicePath = null;
-    _draftCityId = 1; // 👈 5. تصفير قيمة المدينة
+    _draftCityId = 1; 
     emit(const ReportInitial());
   }
 }

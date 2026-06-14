@@ -26,7 +26,7 @@
     "login_face_id": "Login with FaceID",
     "new_here": "New here? ",
     "create_account": "Create an Account",
-    "terms": "By continuing, you agree to our Terms of Service and\\nPrivacy Policy"
+    "terms": "By continuing, you agree to our Terms of Service and\nPrivacy Policy"
   },
   "reporting": {
     "start_report": "START REPORT",
@@ -98,7 +98,10 @@
     "safety_updates": "Safety updates",
     "points_earned": "Points Earned",
     "this_week": "this week",
-    "level_5": "Level 5"
+    "level_5": "Level 5",
+    "account_restricted": "Account Restricted",
+    "account_restricted_desc": "For the safety of emergency operations, your account is temporarily restricted due to exceeding the limit of inaccurate reports. You cannot submit new reports or accept volunteer missions at this time.",
+    "contact_support": "Contact Support"
   },
   "settings": {
     "title": "Settings",
@@ -118,7 +121,8 @@
     "sms_notifications_desc": "Text message alerts",
     "app_version": "App Version",
     "language": "Language",
-    "log_out": "Log Out"
+    "log_out": "Log Out",
+    "volunteer_blocked_desc": "Your account is temporarily restricted from volunteer operations due to repeated false incident reports."
   },
   "history": {
     "title": "My Reports",
@@ -194,5 +198,17 @@
     "cache": "Failed to load cached data.",
     "required_field": "This field is required",
     "network_error": "A network error occurred. Please check your connection."
+  },
+  "categories": {
+    "accident_name": "Accident",
+    "accident_desc": "Traffic accidents, collisions",
+    "fire_name": "Fire",
+    "fire_desc": "Fire, smoke, or burning",
+    "environmental_name": "Environmental",
+    "environmental_desc": "Waste, pollution, nature",
+    "health_name": "Health / Sanitation",
+    "health_desc": "Healthcare, cleanliness",
+    "other_name": "Other",
+    "other_desc": "General or unspecified"
   }
 }

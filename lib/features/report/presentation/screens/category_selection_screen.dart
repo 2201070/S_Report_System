@@ -22,7 +22,6 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       _selectedCategoryId = categoryId;
     });
 
-    // Visual feedback delay
     debugPrint('Selected Category: $categoryId');
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
@@ -93,8 +92,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                   ],
                 ),
               ),
-
-              // Categories Grid
+           // Categories Grid
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
@@ -177,7 +175,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                                       style: const TextStyle(
                                         color: AppColors.accentBlue,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                           fontSize: 14,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -215,7 +213,7 @@ class _CategoryCard extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final int delay;
-  final bool isWide; // To adjust internal layout if needed
+  final bool isWide;
 
   const _CategoryCard({
     required this.category,
@@ -279,7 +277,6 @@ class _CategoryCardState extends State<_CategoryCard>
   @override
   Widget build(BuildContext context) {
     final isEmergency = widget.category.intensity == 'high';
-
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0, end: 1),
       duration: Duration(milliseconds: 400 + (widget.delay * 80)),
@@ -299,7 +296,6 @@ class _CategoryCardState extends State<_CategoryCard>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOut,
-            // Remove padding here so the background pattern fills the whole card
             decoration: BoxDecoration(
               color: AppColors.surfacePrimary,
               borderRadius: BorderRadius.circular(24),
@@ -342,7 +338,6 @@ class _CategoryCardState extends State<_CategoryCard>
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Emergency Pulse Effect Background (Before overlay to avoid blocking)
                   if (isEmergency && !widget.isSelected)
                     Positioned.fill(
                       child: AnimatedBuilder(
@@ -382,8 +377,7 @@ class _CategoryCardState extends State<_CategoryCard>
                       ),
                     ),
                   ),
-
-                  // Gradient Overlay
+                 // Gradient Overlay
                   Positioned.fill(
                     child: Opacity(
                       opacity: 0.7,
@@ -445,7 +439,7 @@ class _CategoryCardState extends State<_CategoryCard>
                           children: [
                             Expanded(
                               child: Text(
-                                widget.category.name,
+                                widget.category.name.tr(), 
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
@@ -471,11 +465,11 @@ class _CategoryCardState extends State<_CategoryCard>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          widget.category.description,
+                          widget.category.description.tr(), 
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 11,
-                            height: 1.3,
+                             height: 1.3,
                           ),
                           maxLines: 2,
                           softWrap: true,
@@ -604,7 +598,6 @@ class _CategoryPatternPainter extends CustomPainter {
       }
     }
   }
-
   void _paintMedical(Canvas canvas, Size size, Color c) {
     final paint = Paint()
       ..color = c
