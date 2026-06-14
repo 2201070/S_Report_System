@@ -199,7 +199,7 @@ class _ClientRegistrationPlatformState extends State<ClientRegistrationPlatform>
     DropdownMenuItem(value: 18, child: Text('بني سويف')),
     DropdownMenuItem(value: 19, child: Text('بورسعيد')),
     DropdownMenuItem(value: 20, child: Text('دمياط')),
-    DropdownMenuItem(value: 21, child: Text('الشرقية - شركيا')),
+    DropdownMenuItem(value: 21, child: Text('الشرقيه')),
     DropdownMenuItem(value: 22, child: Text('جنوب سيناء')),
     DropdownMenuItem(value: 23, child: Text('كفر الشيخ')),
     DropdownMenuItem(value: 24, child: Text('مطروح')),
