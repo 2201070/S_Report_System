@@ -214,9 +214,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (user.volunteer) ...[
             InkWell(
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('جاري الانتقال للوحة المتطوع...')),
-                );
+              
+                  Navigator.pushNamed(context, AppRouter.volunteer);
+
               },
               borderRadius: BorderRadius.circular(16),
               child: Container(

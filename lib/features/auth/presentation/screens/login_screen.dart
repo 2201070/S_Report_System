@@ -46,6 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // احفظ الـ token والبيانات محلياً
       final prefs = await SharedPreferences.getInstance();
+  await prefs.clear(); // مسح البيانات القديمة قبل حفظ الجديدة
+
       await prefs.setString('token', apiData['token'] ?? '');
       await prefs.setString('firstName', apiData['firstName'] ?? '');
       await prefs.setInt('userId', apiData['userId'] ?? 0);

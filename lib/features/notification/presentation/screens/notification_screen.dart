@@ -33,42 +33,54 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     await prefs.setStringList('deleted_notifications', _deletedIds.toList());
   }
 
-  Future<void> _loadNotifications() async {
-    setState(() => _isLoading = true);
-    try {
-      final r1 = await ApiClient.get('/api/Notification/MyNotifications');
-      final r2 = await ApiClient.get('/api/Notification/city');
+Future<void> _loadNotifications() async {
+  setState(() => _isLoading = true);
+  try {
+    // ✅ جيب الـ cityId بتاع اليوزر
+    final prefs = await SharedPreferences.getInstance();
+    final myCityId = prefs.getInt('cityId') ?? 0;
 
-      List<Map<String, dynamic>> all = [];
-      if (r1.statusCode == 200) {
-        final list = jsonDecode(r1.body) as List;
-        all.addAll(list.map((e) => Map<String, dynamic>.from(e)));
-      }
-      if (r2.statusCode == 200) {
-        final list = jsonDecode(r2.body) as List;
-        all.addAll(list.map((e) => Map<String, dynamic>.from(e)));
-      }
+    final r1 = await ApiClient.get('/api/Notification/MyNotifications');
+    final r2 = await ApiClient.get('/api/Notification/city');
 
-      // شيل الإشعارات المحذوفة
-      all.removeWhere((n) {
-        final id = '${n['title']}_${n['date']}';
-        return _deletedIds.contains(id);
-      });
-
-      // رتب حسب الأحدث
-      all.sort((a, b) {
-        final da = DateTime.tryParse(a['date'] ?? '') ?? DateTime(2000);
-        final db = DateTime.tryParse(b['date'] ?? '') ?? DateTime(2000);
-        return db.compareTo(da);
-      });
-
-      setState(() => _notifications = all);
-    } catch (e) {
-      debugPrint('❌ Error: $e');
-    } finally {
-      setState(() => _isLoading = false);
+    List<Map<String, dynamic>> all = [];
+    if (r1.statusCode == 200) {
+      final list = jsonDecode(r1.body) as List;
+      all.addAll(list.map((e) => Map<String, dynamic>.from(e)));
     }
+    if (r2.statusCode == 200) {
+      final list = jsonDecode(r2.body) as List;
+      all.addAll(list.map((e) => Map<String, dynamic>.from(e)));
+    }
+
+    // ✅ فلتر يدوي: امسح أي إشعار من cityId مختلف عن مدينة اليوزر
+    all = all.where((n) {
+      // لو الإشعار مفيهوش cityId خالص، سيبه (لأنه شخصي من MyNotifications)
+      if (!n.containsKey('cityId')) return true;
+      final notifCityId = n['cityId'];
+      return notifCityId == null || notifCityId == myCityId;
+    }).toList();
+
+    // شيل الإشعارات المحذوفة
+    all.removeWhere((n) {
+      final id = '${n['title']}_${n['date']}';
+      return _deletedIds.contains(id);
+    });
+
+    // رتب حسب الأحدث
+    all.sort((a, b) {
+      final da = DateTime.tryParse(a['date'] ?? '') ?? DateTime(2000);
+      final db = DateTime.tryParse(b['date'] ?? '') ?? DateTime(2000);
+      return db.compareTo(da);
+    });
+
+    setState(() => _notifications = all);
+  } catch (e) {
+    debugPrint('❌ Error: $e');
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -169,13 +181,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _notificationCard(Map<String, dynamic> notif) {
-    // تحويل التاريخ
-    String dateStr = '';
-    try {
-      final date = DateTime.parse(notif['date']);
-      dateStr =
-          '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} - ${date.day}/${date.month}';
-    } catch (_) {}
+  String dateStr = '';
+  try {
+    
+    final date = DateTime.parse(notif['date']).toLocal(); // ✅ أضف toLocal()
+    dateStr =
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} - ${date.day}/${date.month}';
+  } catch (_) {}
+
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),

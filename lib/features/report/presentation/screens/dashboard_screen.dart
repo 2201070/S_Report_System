@@ -29,6 +29,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final DashboardDataModel _data = DashboardDataModel.dummyData;
   final List<QuickActionModel> _quickActions = QuickActionModel.dummyActions;
   final List<BottomNavModel> _navItems = BottomNavModel.dummyNavItems;
+   @override
+  void initState() {
+    super.initState();
+    // ✅ أضف ده عشان يجيب بيانات اليوزر الجديد كل مرة الـ Dashboard يفتح
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileCubit>().refresh();
+    });
+  }
 
   void _onNavigate(String routeName) {
     setState(() {
