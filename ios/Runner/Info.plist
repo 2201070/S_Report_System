@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+<key>NSLocationWhenInUseUsageDescription</key>
+    <string>يحتاج تطبيق S-Report الوصول إلى موقعك لتحديد مكان البلاغ بدقة على الخريطة.</string>
+    
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>يحتاج التطبيق الوصول لموقعك لمساعدتك في توجيه المتطوعين لأماكن الأحداث الحية.</string>
     <key>NSCameraUsageDescription</key>
     <string>يحتاج التطبيق إلى الوصول للكاميرا لالتقاط صور الأدلة للمشكلة.</string>
     
